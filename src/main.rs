@@ -50,9 +50,9 @@ impl Node {
 
 fn main() {
     println!("Hello, world!");
-    // Step 1: Create Tree.
-    // Step 2: Create all nodes needed from given tree info.
-    //      TODO: Generate nodes using weibull distribution.
-    // Step 3: Retrieve key signal.
-    // Step 4: Port to STM32.
+    // TODO: Create Tree.
+    // TODO: Create all nodes needed from given tree info.
+    // TODO: Retrieve key signal.
+    // TODO: Generate nodes using weibull distribution.
+    // TODO: Port to STM32.
 }
