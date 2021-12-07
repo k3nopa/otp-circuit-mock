@@ -1,13 +1,14 @@
+use rand::Rng;
 use rs_debugging::tree::Tree;
 
 fn main() {
-    let mut tree = Tree::new(4);
+    let mut tree = Tree::new(3);
 
     tree.generate();
     tree.draw();
 
-    // TODO: Retrieve key signal.
-    // TODO: Generate nodes using weibull distribution.
+    let path = rand::thread_rng().gen_range(0..=255);
+    let _otp_key = tree.key(path);
 
     // TODO: Need to implement global allocator in order to use Vec type for STM32.
     // REF : https://github.com/rust-embedded/alloc-cortex-m
