@@ -1,5 +1,12 @@
+#[warn(unused_assignments)]
+#[warn(dead_code)]
 use crate::node::Node;
 
+/// Holds multiple complete structure of OTP decision trees.
+pub struct DecisionTree {
+    layers: usize,
+    trees: Vec<Tree>,
+}
 /// Holds a complete structure of one OTP decision tree (all nodes are contain).
 /// Generate tree based on amount height.
 #[derive(Debug)]
@@ -8,6 +15,22 @@ pub struct Tree {
     /// Because Node tracks its parent and childrens with ids.
     pub tree: Vec<Node>,
     height: usize,
+}
+
+impl DecisionTree {
+    pub fn new(layers: usize, height: usize) -> Self {
+        let mut trees = vec![];
+
+        for _ in 0..layers {
+            let tree = Tree::new(height);
+            trees.push(tree);
+        }
+
+        Self { layers, trees }
+    }
+    pub fn key() -> Option<u32> {
+        todo!()
+    }
 }
 
 impl Tree {
@@ -63,59 +86,46 @@ impl Tree {
         let bin_repr = format!("{:08b}", path);
 
         // Make sure path's bit length is approriate.
-        let mut path = String::with_capacity(self.height);
-        path = bin_repr[(bin_repr.len() - self.height)..].to_string();
-        let _key = self.traverse_tree(0, &path);
-
-        None
+        let path = bin_repr[(bin_repr.len() - self.height)..].to_string();
+        let key = self.traverse_tree(0, &path);
+        println!("Key: {:?}", key);
+        key
     }
 
     fn traverse_tree(&mut self, node_id: usize, path: &str) -> Option<u32> {
         // Current Switch Node has degraded, value == 0.
         if self.tree[node_id].value == 0 {
-            println!("Switch Degraded!");
+            println!("Degraded");
             return None;
         }
         // Manage to traverse to memory Node.
         if self.tree[node_id].children[0] == -1 {
-            println!("Memory : {}", node_id);
+            println!("Memory {}", node_id);
             return Some(self.tree[node_id].value);
         }
 
         for (i, p) in path.chars().enumerate() {
             match p {
                 '0' => {
-                    if self.tree[node_id].value > 0 {
+                    // As root node are not switch Node.
+                    if node_id != 0 && self.tree[node_id].value > 0 {
                         self.tree[node_id].value -= 1;
                     }
-                    // As root node are not switch Node.
-                    if node_id == 0 {
-                        self.traverse_tree(
-                            self.tree[node_id + 1].children[0] as usize,
-                            &path[i + 1..],
-                        );
-                    } else {
-                        self.traverse_tree(self.tree[node_id].children[0] as usize, &path[i + 1..]);
-                    }
+                    return self
+                        .traverse_tree(self.tree[node_id].children[0] as usize, &path[i + 1..]);
                 }
                 '1' => {
-                    if self.tree[node_id].value > 0 {
+                    // As root node are not switch Node.
+                    if node_id != 0 && self.tree[node_id].value > 0 {
                         self.tree[node_id].value -= 1;
                     }
-                    // As root node are not switch Node.
-                    if node_id == 0 {
-                        self.traverse_tree(
-                            self.tree[node_id + 1].children[1] as usize,
-                            &path[i + 1..],
-                        );
-                    } else {
-                        self.traverse_tree(self.tree[node_id].children[1] as usize, &path[i + 1..]);
-                    }
+                    return self
+                        .traverse_tree(self.tree[node_id].children[1] as usize, &path[i + 1..]);
                 }
                 _ => {}
-            };
+            }
         }
-        None
+        return None;
     }
 
     /// Draw the decision tree using graphiz.

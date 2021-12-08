@@ -7,8 +7,10 @@ fn main() {
     tree.generate();
     tree.draw();
 
-    let path = rand::thread_rng().gen_range(0..=255);
-    let _otp_key = tree.key(path);
+    for _ in 0..=10 {
+        let path = rand::thread_rng().gen_range(0..=255);
+        let _otp_key = tree.key(path);
+    }
 
     // TODO: Need to implement global allocator in order to use Vec type for STM32.
     // REF : https://github.com/rust-embedded/alloc-cortex-m
