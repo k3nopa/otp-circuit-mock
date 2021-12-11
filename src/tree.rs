@@ -28,8 +28,25 @@ impl DecisionTree {
 
         Self { layers, trees }
     }
-    pub fn key() -> Option<u32> {
-        todo!()
+    pub fn key(&mut self, path: u8) -> Option<u32> {
+        let mut ret = None;
+        let mut status = false;
+        let mut curr = 0;
+
+        while !status {
+            let res = self.trees[curr].key(path);
+            ret = match res {
+                Some(k) => {
+                    status = true;
+                    Some(k)
+                }
+                None => {
+                    curr += 1;
+                    None
+                }
+            };
+        }
+        ret
     }
 }
 
@@ -88,7 +105,6 @@ impl Tree {
         // Make sure path's bit length is approriate.
         let path = bin_repr[(bin_repr.len() - self.height)..].to_string();
         let key = self.traverse_tree(0, &path);
-        println!("Key: {:?}", key);
         key
     }
 
