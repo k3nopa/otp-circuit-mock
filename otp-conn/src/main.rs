@@ -1,5 +1,5 @@
+use otp::tree::DecisionTree;
 use rand::Rng;
-use rs_debugging::tree::DecisionTree;
 
 fn main() {
     let mut otp_tree = DecisionTree::new(128, 7);
