@@ -6,8 +6,10 @@ fn main() {
 
     for i in 0..=10 {
         let path = rand::thread_rng().gen_range(0..=255);
+        let bin_repr = format!("{:08b}", path);
+
         let otp_key = otp_tree.key(path);
-        println!("[{}]{} -> {:?}", i, path, otp_key);
+        println!("Iteration: {} Path: {} -> {:?}", i, bin_repr, otp_key);
     }
 
     // TODO: Need to implement global allocator in order to use Vec type for STM32 (or generate

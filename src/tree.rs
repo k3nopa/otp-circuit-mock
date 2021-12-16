@@ -4,8 +4,7 @@ use crate::node::Node;
 
 /// Holds multiple complete structure of OTP decision trees.
 pub struct DecisionTree {
-    layers: usize,
-    trees: Vec<Tree>,
+    pub trees: Vec<Tree>,
 }
 /// Holds a complete structure of one OTP decision tree (all nodes are contain).
 /// Generate tree based on amount height.
@@ -26,7 +25,12 @@ impl DecisionTree {
             trees.push(tree);
         }
 
-        Self { layers, trees }
+        for i in 0..layers {
+            let tree = &mut trees[i];
+            tree.generate();
+        }
+
+        Self { trees }
     }
     pub fn key(&mut self, path: u8) -> Option<u32> {
         let mut ret = None;
@@ -41,6 +45,8 @@ impl DecisionTree {
                     Some(k)
                 }
                 None => {
+                    let bin_repr = format!("{:08b}", path);
+                    println!("Path: {}, Degraded on Layer: {}", bin_repr, curr);
                     curr += 1;
                     None
                 }
@@ -111,12 +117,10 @@ impl Tree {
     fn traverse_tree(&mut self, node_id: usize, path: &str) -> Option<u32> {
         // Current Switch Node has degraded, value == 0.
         if self.tree[node_id].value == 0 {
-            println!("Degraded");
             return None;
         }
         // Manage to traverse to memory Node.
         if self.tree[node_id].children[0] == -1 {
-            println!("Memory {}", node_id);
             return Some(self.tree[node_id].value);
         }
 
