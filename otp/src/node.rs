@@ -4,8 +4,6 @@ use rand_distr::Weibull;
 #[derive(Debug, Clone, Copy)]
 pub struct Node {
     pub node_id: usize,
-    decision_input: Option<u8>,
-    decision_output: Option<u8>,
     pub children: [isize; 2],
     pub value: u32,
 }
@@ -19,8 +17,6 @@ impl Node {
 
         Self {
             node_id,
-            decision_input: None,
-            decision_output: None,
             children: [-1, -1],
             value: random as u32,
         }
@@ -29,8 +25,6 @@ impl Node {
         let random = thread_rng().gen::<u32>();
         Self {
             node_id,
-            decision_input: None,
-            decision_output: None,
             children: [-1, -1],
             value: random,
         }
