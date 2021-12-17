@@ -20,14 +20,7 @@ fn main() {
     let mut otp_tree = DecisionTree::new(128, 7);
 
     loop {
-        let input = loop {
-            let input = match serial_recv(&mut port) {
-                Ok(x) => break x,
-                Err(_) => {}
-            };
-            input
-        };
-        let input = String::from_utf8_lossy(&input).to_string();
+        let input = serial_recv(&mut port).unwrap();
         let path = input.parse::<u8>().unwrap();
         println!("Path Recv: {}", path);
 
@@ -44,10 +37,23 @@ fn serial_send<T: SerialPort>(port: &mut T, key: &[u8]) -> io::Result<()> {
     Ok(())
 }
 
-fn serial_recv<T: SerialPort>(port: &mut T) -> io::Result<[u8; 50]> {
+fn serial_recv<T: SerialPort>(port: &mut T) -> io::Result<String> {
     port.set_timeout(Duration::from_millis(1000)).unwrap();
-    let mut key = [0u8; 50];
-    port.read(&mut key[..]).unwrap();
-
+    let mut key = [0u8; 5];
+    loop {
+        match port.read(&mut key[..]) {
+            Ok(_) => break,
+            Err(_) => port.set_timeout(Duration::from_millis(1000)).unwrap(),
+        };
+    }
+    println!("Byte Recv: {:?}", key);
+    let mut zero_index = 0;
+    for i in 0..key.len() {
+        if key[i] == 0u8 {
+            zero_index = i + 1;
+            break;
+        }
+    }
+    let key = String::from_utf8(key[0..zero_index].to_vec()).unwrap();
     Ok(key)
 }
