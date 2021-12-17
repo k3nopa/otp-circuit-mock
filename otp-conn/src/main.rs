@@ -20,7 +20,13 @@ fn main() {
     let mut otp_tree = DecisionTree::new(128, 7);
 
     loop {
-        let input = serial_recv(&mut port).unwrap();
+        let input = loop {
+            let input = match serial_recv(&mut port) {
+                Ok(x) => break x,
+                Err(_) => {}
+            };
+            input
+        };
         let input = String::from_utf8_lossy(&input).to_string();
         let path = input.parse::<u8>().unwrap();
         println!("Path Recv: {}", path);
