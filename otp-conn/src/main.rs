@@ -9,19 +9,23 @@ enum Status {
 }
 
 fn main() {
-    let mut otp_tree = DecisionTree::new(128, 7);
     let port_name = "/dev/ttyS0";
     let baud_rate = 115200;
 
-    let port = serialport::new(port_name, baud_rate)
-        .timeout(Duration::from_millis(10))
-        .open();
+    let builder = serialport::new(port_name, baud_rate)
+        .stop_bits(serialport::StopBits::One)
+        .data_bits(serialport::DataBits::Eight)
+        .timeout(Duration::from_millis(10));
+
+    let port = builder.open();
+    let mut otp_tree = DecisionTree::new(128, 7);
 
     match port {
         Ok(mut port) => {
             println!("Receiving data on {} at {} baud:", &port_name, &baud_rate);
             let path = serial_read(&mut port).unwrap();
             println!("Path: {:?}", path);
+            serial_write(&mut port, path.as_bytes()).unwrap();
         }
         Err(e) => {
             eprintln!("Failed to open \"{}\". Error: {}", port_name, e);
@@ -60,4 +64,9 @@ fn serial_read(port: &mut Box<dyn serialport::SerialPort>) -> io::Result<String>
         }
     };
     Ok(path)
+}
+
+fn serial_write(port: &mut Box<dyn serialport::SerialPort>, data: &[u8]) -> io::Result<()> {
+    port.write(data).unwrap();
+    Ok(())
 }
