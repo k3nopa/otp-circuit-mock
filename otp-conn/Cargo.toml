@@ -7,4 +7,5 @@ edition = "2018"
 
 [dependencies]
 serialport = "4.0.1"
+byteorder = "1"
 otp = { path = "../otp"}
