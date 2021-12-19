@@ -1,5 +1,3 @@
-#[warn(unused_assignments)]
-#[warn(dead_code)]
 use crate::node::Node;
 
 /// Holds multiple complete structure of OTP decision trees.
@@ -17,7 +15,7 @@ pub struct Tree {
 }
 
 impl DecisionTree {
-    pub fn new(layers: usize, height: usize) -> Self {
+    pub fn new(layers: usize, height: usize) -> (Self, Vec<Vec<u32>>) {
         let mut trees = vec![];
 
         for _ in 0..layers {
@@ -29,8 +27,17 @@ impl DecisionTree {
             let tree = &mut trees[i];
             tree.generate();
         }
+        let mut keys = vec![];
+        keys.reserve(layers);
+        for layer in &trees {
+            let mut key = vec![];
+            key.reserve(2usize.pow(height as u32));
 
-        Self { trees }
+            let all = layer.fetch_all_keys(0, &mut key);
+            keys.push(all);
+        }
+
+        (Self { trees }, keys)
     }
     pub fn key(&mut self, path: u8) -> Option<u32> {
         let mut ret = None;
@@ -180,5 +187,17 @@ impl Tree {
         }
 
         println!("}}");
+    }
+    fn fetch_all_keys(&self, node_id: usize, keys: &mut Vec<u32>) -> Vec<u32> {
+        // Manage to traverse to memory Node.
+        if self.tree[node_id].children[0] == -1 {
+            keys.push(self.tree[node_id].value);
+            return keys.to_vec();
+        }
+
+        self.fetch_all_keys(self.tree[node_id].children[0] as usize, keys);
+        self.fetch_all_keys(self.tree[node_id].children[1] as usize, keys);
+
+        keys.to_vec()
     }
 }
