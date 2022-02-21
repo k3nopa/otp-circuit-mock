@@ -11,3 +11,4 @@ Cargo.lock
 
 # Mac OS
 .DS_Store
+*.bac
