@@ -6,7 +6,7 @@ pub struct DecisionTree {
 }
 /// Holds a complete structure of one OTP decision tree (all nodes are contain).
 /// Generate tree based on amount height.
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct Tree {
     /// Vector is used here as an arena to index or search Node from its id.
     /// Because Node tracks its parent and childrens with ids.
@@ -39,27 +39,25 @@ impl DecisionTree {
 
         (Self { trees }, keys)
     }
-    pub fn key(&mut self, path: u8) -> Option<u32> {
-        let mut ret = None;
-        let mut status = false;
-        let mut curr = 0;
+    pub fn key(&mut self, path: u8) -> (Vec<u32>, Vec<usize>) {
+        let mut result = vec![];
+        let mut layer = vec![];
 
-        while !status {
-            let res = self.trees[curr].key(path);
-            ret = match res {
+        for i in 0..self.trees.len() {
+            let res = self.trees[i].key(path);
+            // let bin_repr = format!("{:08b}", path);
+            match res {
                 Some(k) => {
-                    status = true;
-                    Some(k)
+                    layer.push(i);
+                    result.push(k);
                 }
                 None => {
-                    let bin_repr = format!("{:08b}", path);
-                    println!("Path: {}, Degraded on Layer: {}", bin_repr, curr);
-                    curr += 1;
-                    None
+                    // println!("Path: {}, Degraded on Layer: {}", bin_repr, curr);
+                    // curr += 1;
                 }
-            };
+            }
         }
-        ret
+        (result, layer)
     }
 }
 
@@ -135,7 +133,10 @@ impl Tree {
             match p {
                 '0' => {
                     // As root node are not switch Node.
-                    if node_id != 0 && self.tree[node_id].value > 0 {
+                    // if node_id != 0 && self.tree[node_id].value > 0 {
+                    //     self.tree[node_id].value -= 1;
+                    // }
+                    if self.tree[node_id].value > 0 {
                         self.tree[node_id].value -= 1;
                     }
                     return self
@@ -143,7 +144,10 @@ impl Tree {
                 }
                 '1' => {
                     // As root node are not switch Node.
-                    if node_id != 0 && self.tree[node_id].value > 0 {
+                    // if node_id != 0 && self.tree[node_id].value > 0 {
+                    //     self.tree[node_id].value -= 1;
+                    // }
+                    if self.tree[node_id].value > 0 {
                         self.tree[node_id].value -= 1;
                     }
                     return self

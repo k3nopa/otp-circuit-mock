@@ -13,7 +13,7 @@ impl Node {
         // State in Lemonade paper at section 6.4
         // scale parameter = 10
         // shape parameter = 1
-        let random: f64 = thread_rng().sample(Weibull::new(10., 1.).unwrap());
+        let random: f64 = thread_rng().sample(Weibull::new(1000.5, 1.).unwrap());
 
         Self {
             node_id,
@@ -22,11 +22,11 @@ impl Node {
         }
     }
     pub fn memory(node_id: usize) -> Self {
-        let random = thread_rng().gen::<u32>();
+        let random = thread_rng().gen::<u8>();
         Self {
             node_id,
             children: [-1, -1],
-            value: random,
+            value: random as u32,
         }
     }
 }
