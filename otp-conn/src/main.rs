@@ -42,8 +42,8 @@ enum Status {
 }
 
 fn send_decision_tree(port: &mut Box<dyn serialport::SerialPort>, memory_nodes: &Vec<Vec<u32>>) {
-    // let total = memory_nodes.len() * memory_nodes[0].len();
-    // let mut pb = ProgressBar::new(total as u64);
+    let total = memory_nodes.len() * memory_nodes[0].len();
+    let mut pb = ProgressBar::new(total as u64);
     let mut status = Status::SEND;
 
     for node in memory_nodes {
@@ -73,7 +73,7 @@ fn send_decision_tree(port: &mut Box<dyn serialport::SerialPort>, memory_nodes: 
                     };
                 }
             }
-            // pb.inc();
+            pb.inc();
         }
     }
 }
