@@ -1,13 +1,11 @@
-use byteorder::{BigEndian, WriteBytesExt};
-use otp::tree::DecisionTree;
-use serialport;
-use std::time::Duration;
-use std::{io, thread};
+#![allow(unused_assignments)]
 
-enum Status {
-    ReadSize,
-    ReadData,
-}
+use byteorder::{BigEndian, ReadBytesExt, WriteBytesExt};
+use otp::tree::DecisionTree;
+use pbr::ProgressBar;
+use serialport;
+use std::io;
+use std::time::Duration;
 
 static LAYER: usize = 128;
 static HEIGHT: usize = 7;
@@ -22,29 +20,13 @@ fn main() {
         .timeout(Duration::from_millis(10));
 
     let port = builder.open();
-    let (mut otp_tree, mut memory_nodes) = DecisionTree::new(LAYER, HEIGHT);
+    let (_otp_tree, memory_nodes) = DecisionTree::new(LAYER, HEIGHT);
 
     match port {
         Ok(mut port) => {
             println!("UART on {} at {} baud:", &port_name, &baud_rate);
-            // 1. Send OTP info.
-            for node in memory_nodes {
-                for val in node {
-                    let mut data = vec![];
-                    data.write_u32::<BigEndian>(val).unwrap();
-
-                    println!("{}: {:?}", val, data);
-                    serial_write(&mut port, &data).unwrap();
-                    thread::sleep(Duration::from_millis(20));
-                }
-                thread::sleep(Duration::from_millis(5));
-            }
-            // serial_write(&mut port, memory_nodes).unwrap();
-            // let path = serial_read(&mut port).unwrap();
-            // println!("Path: {:?}", path);
-            // let path = path.parse::<u8>().unwrap();
-            // let res = otp_tree.key(path).unwrap();
-            // println!("Key: {:?}", res);
+            send_decision_tree(&mut port, &memory_nodes);
+            println!("Decision Tree: {:?}", memory_nodes);
         }
         Err(e) => {
             eprintln!("Failed to open \"{}\". Error: {}", port_name, e);
@@ -53,41 +35,45 @@ fn main() {
     }
 }
 
-fn serial_read(port: &mut Box<dyn serialport::SerialPort>) -> io::Result<String> {
-    let mut status = Status::ReadSize;
-    let mut tmp_path = String::new();
-    let mut size = 0;
-    let mut buffer = [0; 10];
-
-    let path = loop {
-        match port.read(&mut buffer) {
-            Ok(t) => match status {
-                Status::ReadSize => {
-                    // TODO: if the size == 0, do initialization.
-                    // Sending OTP tree.
-                    size = String::from_utf8_lossy(&buffer[..t])
-                        .parse::<usize>()
-                        .unwrap();
-                    status = Status::ReadData;
-                    tmp_path.reserve(size);
-                }
-                Status::ReadData => {
-                    size -= t;
-                    let input = String::from_utf8_lossy(&buffer[..t]);
-                    tmp_path += &input;
-                    if size == 0 {
-                        break tmp_path;
-                    }
-                }
-            },
-            Err(ref e) if e.kind() == io::ErrorKind::TimedOut => (),
-            Err(e) => eprintln!("{:?}", e),
-        }
-    };
-    Ok(path)
+#[derive(PartialEq)]
+enum Status {
+    SEND,
+    RECV,
 }
 
-fn serial_write(port: &mut Box<dyn serialport::SerialPort>, data: &[u8]) -> io::Result<()> {
-    port.write(data).unwrap();
-    Ok(())
+fn send_decision_tree(port: &mut Box<dyn serialport::SerialPort>, memory_nodes: &Vec<Vec<u32>>) {
+    // let total = memory_nodes.len() * memory_nodes[0].len();
+    // let mut pb = ProgressBar::new(total as u64);
+    let mut status = Status::SEND;
+
+    for node in memory_nodes {
+        for val in node {
+            let mut data = vec![];
+            data.write_u32::<BigEndian>(*val).unwrap();
+
+            if Status::SEND == status {
+                port.write(&data).unwrap();
+                status = Status::RECV;
+            }
+            if Status::RECV == status {
+                let mut buf = [0; 1];
+                let mut resp = 0;
+                while resp == 0 {
+                    match port.read(&mut buf) {
+                        Ok(_) => {
+                            let mut buffer = io::Cursor::new(buf);
+                            resp = buffer.read_u8().unwrap();
+                            status = Status::SEND;
+                        }
+                        Err(ref e) if e.kind() == io::ErrorKind::TimedOut => {}
+                        Err(e) => {
+                            eprintln!("{:?}", e);
+                            resp = 1;
+                        }
+                    };
+                }
+            }
+            // pb.inc();
+        }
+    }
 }
